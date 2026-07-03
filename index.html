@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Storage Table - ระบบจัดการข้อมูลรูปแบบตาราง</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: #334155;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 30px auto;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin-bottom: 20px;
+            color: #1e293b;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Form Style */
+        .form-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto;
+            gap: 15px;
+            margin-bottom: 30px;
+            align-items: end;
+        }
+
+        .input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .input-box label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #64748b;
+        }
+
+        .input-box input, .input-box select {
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .input-box input:focus, .input-box select:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        /* Buttons */
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-add {
+            background-color: #2563eb;
+            color: white;
+            height: 42px;
+        }
+
+        .btn-add:hover {
+            background-color: #1d4ed8;
+        }
+
+        .btn-delete {
+            background-color: #ef4444;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+        }
+
+        .btn-delete:hover {
+            background-color: #dc2626;
+        }
+
+        /* Table Style */
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        thead {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        th {
+            padding: 14px 18px;
+            font-weight: 600;
+            color: #475569;
+        }
+
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        /* Empty State */
+        .no-data {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px !important;
+            font-style: italic;
+        }
+
+        /* Tag Style */
+        .status-tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        .status-active { background: #dcfce7; color: #15803d; }
+        .status-pending { background: #fef9c3; color: #a16207; }
+        .status-inactive { background: #f1f5f9; color: #64748b; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>📊 ระบบบันทึกและจัดการข้อมูล</h2>
+        
+        <form id="dataForm" class="form-group" onsubmit="addData(event)">
+            <div class="input-box">
+                <label for="name">ชื่อ-นามสกุล</label>
+                <input type="text" id="name" placeholder="กรอกชื่อของคุณ" required>
+            </div>
+            <div class="input-box">
+                <label for="role">ตำแหน่ง / บทบาท</label>
+                <input type="text" id="role" placeholder="เช่น โปรแกรมเมอร์, ดีไซเนอร์" required>
+            </div>
+            <div class="input-box">
+                <label for="status">สถานะการทำงาน</label>
+                <select id="status">
+                    <option value="Active">ทำงานอยู่ (Active)</option>
+                    <option value="Pending">รอดำเนินการ (Pending)</option>
+                    <option value="Inactive">พ้นสภาพ (Inactive)</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-add">+ เพิ่มข้อมูล</button>
+        </form>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ลำดับ</th>
+                        <th>ชื่อ-นามสกุล</th>
+                        <th>ตำแหน่ง / บทบาท</th>
+                        <th>สถานะ</th>
+                        <th>การจัดการ</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // โหลดข้อมูลจาก LocalStorage วิ่งมาแสดงตอนเปิดเว็บครั้งแรก
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTable();
+        });
+
+        // ฟังก์ชันดึงข้อมูลจาก LocalStorage
+        function getStoredData() {
+            const data = localStorage.getItem('table_records');
+            return data ? JSON.parse(data) : [];
+        }
+
+        // ฟังก์ชันบันทึกข้อมูลและวาดตารางใหม่
+        function addData(event) {
+            event.preventDefault(); // ป้องกันไม่ให้หน้าเว็บรีโหลดตอนกดส่งฟอร์ม
+
+            const nameInput = document.getElementById('name');
+            const roleInput = document.getElementById('role');
+            const statusInput = document.getElementById('status');
+
+            const currentData = getStoredData();
+            
+            // สร้างก้อนข้อมูลใหม่
+            const newRecord = {
+                id: Date.now(), // ใช้เวลาปัจจุบันทำเป็น ID เพื่อไม่ให้ซ้ำกัน
+                name: nameInput.value,
+                role: roleInput.value,
+                status: statusInput.value
+            };
+
+            currentData.push(newRecord);
+            localStorage.setItem('table_records', JSON.stringify(currentData));
+
+            // เคลียร์ค่าในช่องอินพุต
+            nameInput.value = '';
+            roleInput.value = '';
+            statusInput.value = 'Active';
+
+            renderTable();
+        }
+
+        // ฟังก์ชันลบข้อมูล
+        function deleteData(id) {
+            if(confirm('คุณแน่ใจใช่ไหมที่จะลบข้อมูลแถวนี้?')) {
+                let currentData = getStoredData();
+                currentData = currentData.filter(item => item.id !== id);
+                localStorage.setItem('table_records', JSON.stringify(currentData));
+                renderTable();
+            }
+        }
+
+        // ฟังก์ชันสร้างแถวตารางจากข้อมูลที่มีอยู่
+        function renderTable() {
+            const tableBody = document.getElementById('tableBody');
+            const data = getStoredData();
+
+            tableBody.innerHTML = ''; // เคลียร์ตารางเดิมก่อน
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="5" class="no-data">ยังไม่มีข้อมูลในระบบ ลองเพิ่มข้อมูลด้านบนดูสิ! 📥</td></tr>`;
+                return;
+            }
+
+            data.forEach((item, index) => {
+                let statusClass = 'status-active';
+                if(item.status === 'Pending') statusClass = 'status-pending';
+                if(item.status === 'Inactive') statusClass = 'status-inactive';
+
+                const row = `
+                    <tr>
+                        <td><b>${index + 1}</b></td>
+                        <td>${escapeHtml(item.name)}</td>
+                        <td>${escapeHtml(item.role)}</td>
+                        <td><span class="status-tag ${statusClass}">${item.status}</span></td>
+                        <td>
+                            <button class="btn-delete" onclick="deleteData(${item.id})">ลบ</button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.innerHTML += row;
+            });
+        }
+
+        // ฟังก์ชันป้องกันการเจาะระบบผ่านการพิมพ์โค้ด (XSS Protection)
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
